@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Stato Review — Sign-Off</title>
+<style>
+  :root{
+    --navy-1:#0a2a5e; --navy-2:#12468f; --navy-3:#1a63c4;
+    --blue-mid:#2f7de0; --blue-light:#a9cdf2; --blue-lighter:#d6e8fa;
+    --signoff:#0d3a7a; --firstpass:#a9cdf2;
+    --green-1:#0c6b52; --green-2:#12876a; --green-accent:#0e7a5f;
+    --grey-track:#dfe4ea; --grey-txt:#6b7785;
+    --ink:#12233d; --card:#ffffff; --bg:#eef2f7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);padding:22px}
+  .header{background:linear-gradient(90deg,#000 0%,#0a1830 60%,#0a2a5e 100%);color:#fff;border-radius:14px;padding:22px 28px;margin-bottom:18px;box-shadow:0 6px 22px rgba(10,42,94,.25)}
+  .header h1{font-size:22px;font-weight:600;line-height:1.3}
+
+  .layout{display:grid;grid-template-columns:1fr 300px;gap:18px}
+  @media(max-width:1100px){.layout{grid-template-columns:1fr}}
+
+  .panel{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 4px 16px rgba(20,35,61,.08)}
+
+  .group-head{display:flex;align-items:center;gap:12px;margin:6px 0 14px}
+  .group-tag{background:linear-gradient(160deg,var(--navy-3),var(--navy-1));color:#fff;font-weight:600;font-size:14px;padding:10px 16px;border-radius:10px;min-width:150px;text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
+  .group-prog{font-size:13px;color:var(--grey-txt);font-weight:600}
+
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;color:var(--grey-txt);font-weight:600;text-align:center;padding:8px 4px;vertical-align:bottom;line-height:1.25}
+  th.doc{border-bottom:2px solid #eef2f7}
+  td{padding:9px 4px;text-align:center}
+  td.rowlbl{text-align:left;font-size:12.5px;font-weight:600;color:var(--navy-2);white-space:nowrap;padding-right:10px}
+  .weight{display:block;font-size:10px;color:var(--grey-txt);font-weight:500}
+
+  .dot{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--navy-2);background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.18s;position:relative}
+  .dot:hover{transform:scale(1.12)}
+  .dot.fp{border-color:var(--blue-mid)}
+  .dot.fp.done{background:var(--blue-mid);border-color:var(--blue-mid)}
+  .dot.so.done{background:var(--signoff);border-color:var(--signoff)}
+  .dot .chk{color:#fff;font-size:15px;opacity:0;transition:.15s}
+  .dot.done .chk{opacity:1}
+
+  .divider{height:1px;background:#eef2f7;margin:2px 0}
+
+  .side{display:flex;flex-direction:column;gap:18px}
+  .kpi{background:var(--card);border-radius:14px;padding:22px;text-align:center;box-shadow:0 4px 16px rgba(20,35,61,.08)}
+  .kpi h3{color:var(--green-accent);font-size:15px;margin-bottom:14px;letter-spacing:.3px}
+  .ring{width:120px;height:120px;margin:0 auto}
+  .kpi .val{font-size:26px;font-weight:700;color:var(--green-accent);margin-top:10px}
+  .kpi .sub{font-size:11px;color:var(--grey-txt);margin-top:2px}
+  .kpi.total{background:linear-gradient(160deg,#0a2a5e,#12468f);color:#fff}
+  .kpi.total h3{color:#bcd6f7}
+  .kpi.total .val{color:#fff}
+  .kpi.total .sub{color:#bcd6f7}
+
+  .bar{height:9px;background:var(--grey-track);border-radius:6px;overflow:hidden;margin-top:14px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--green-1),var(--green-2));border-radius:6px;transition:width .5s}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+  button.act{border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:12.5px;padding:10px 16px;border-radius:9px;transition:.15s}
+  .btn-primary{background:linear-gradient(160deg,var(--green-1),var(--green-2));color:#fff}
+  .btn-ghost{background:#eef2f7;color:var(--navy-2)}
+  button.act:hover{filter:brightness(1.08);transform:translateY(-1px)}
+
+  .status{font-size:11.5px;margin-left:auto;display:inline-flex;align-items:center;gap:7px;color:var(--grey-txt)}
+  .status .led{width:9px;height:9px;border-radius:50%;background:#c2ccd6;transition:.3s}
+  .status.online .led{background:#18a06f;box-shadow:0 0 0 3px rgba(24,160,111,.18)}
+  .status.err .led{background:#d0433b}
+
+  .legend{display:flex;gap:18px;font-size:11.5px;color:var(--grey-txt);margin-bottom:14px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .sw.fp{background:var(--blue-mid)}.sw.so{background:var(--signoff)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy-1);color:#fff;padding:12px 22px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .setup{background:#fff7e6;border:1px solid #f2d492;border-radius:12px;padding:16px 18px;margin-bottom:18px;font-size:13px;line-height:1.5;color:#7a5b12}
+  .setup b{color:#5a4209}
+  .setup code{background:#f6ead0;padding:1px 6px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Stato di avanzamento delle review verso il Sign-Off finale</h1>
+</div>
+
+<div class="setup" id="setupNote" style="display:none">
+  <b>⚙️ Configurazione richiesta (una sola volta).</b> Incolla i tuoi valori Supabase nel codice, righe <code>SUPABASE_URL</code> e <code>SUPABASE_KEY</code> in fondo al file. Finché non lo fai, la dashboard funziona solo in locale su questo browser.
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <div class="legend">
+      <span><i class="sw fp"></i> First-Pass Review</span>
+      <span><i class="sw so"></i> Sign-Off Review</span>
+    </div>
+    <div id="grid"></div>
+    <div class="toolbar">
+      <button class="act btn-ghost" onclick="resetAll()">↺ Reset condiviso</button>
+      <span class="status" id="status"><span class="led"></span><span id="statusTxt">Locale</span></span>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="kpi total">
+      <h3>PROGRESS TOTALE</h3>
+      <div class="ring" id="ringTotal"></div>
+      <div class="val" id="valTotal">0%</div>
+      <div class="sub">Effort di revisione ponderato</div>
+    </div>
+    <div class="kpi">
+      <h3>TEMPLATE STANDARD</h3>
+      <div class="ring" id="ringTS"></div>
+      <div class="val" id="valTS">0%</div>
+      <div class="bar"><i id="barTS" style="width:0%"></i></div>
+    </div>
+    <div class="kpi">
+      <h3>DATA PLATFORM</h3>
+      <div class="ring" id="ringDP"></div>
+      <div class="val" id="valDP">0%</div>
+      <div class="bar"><i id="barDP" style="width:0%"></i></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =========================================================================
+   CONFIGURAZIONE SUPABASE  —  incolla qui i tuoi due valori
+   (Project Settings → API → Project URL e Publishable/anon key)
+   Se li lasci vuoti, la dashboard funziona solo in locale su questo browser.
+========================================================================= */
+const SUPABASE_URL = "";   // es: "https://abcd1234.supabase.co"
+const SUPABASE_KEY = "";   // publishable key (sb_publishable_...) o anon key
+const ROOM = "gara-fs-review";  // identificativo condiviso; cambialo per board separate
+/* ===================================================================== */
+
+const DOCS = [
+  {id:'cap', name:'Capitolato Tecnico',           weight:40, fp:25, so:15},
+  {id:'cri', name:'Criteri di Aggiudicazione',    weight:20, fp:15, so:5},
+  {id:'acc', name:'Accordo Quadro',               weight:10, fp:6,  so:4},
+  {id:'gri', name:'Griglia di Valutazione',       weight:10, fp:6,  so:4},
+  {id:'tpl', name:'Template Risposta Tech./Econ.',weight:10, fp:6,  so:4},
+  {id:'qa',  name:'Template Q&A',                  weight:5,  fp:3,  so:2},
+  {id:'card',name:'Card di Valutazione Gare',      weight:5,  fp:3,  so:2},
+];
+const GROUPS=[{id:'TS',label:'Template Standard'},{id:'DP',label:'Data Platform'}];
+const PHASES=[{k:'fp',label:'First-Pass Review'},{k:'so',label:'Sign-Off Review'}];
+
+const LKEY='review_dashboard_shared_v2';
+let state=blankState();
+let sb=null, connected=false;
+
+function blankState(){const s={};GROUPS.forEach(g=>{s[g.id]={};DOCS.forEach(d=>{s[g.id][d.id]={fp:false,so:false}})});return s;}
+
+function buildGrid(){
+  let h='';
+  GROUPS.forEach((g,gi)=>{
+    h+=`<div class="group-head"><div class="group-tag">${g.label}</div><div class="group-prog" id="gp_${g.id}"></div></div>`;
+    h+='<table><thead><tr><th></th>';
+    DOCS.forEach(d=>h+=`<th class="doc">${d.name}<span class="weight">${d.weight}%</span></th>`);
+    h+='</tr></thead><tbody>';
+    PHASES.forEach(p=>{
+      h+=`<tr><td class="rowlbl">${p.label}</td>`;
+      DOCS.forEach(d=>h+=`<td><div class="dot ${p.k}" data-g="${g.id}" data-d="${d.id}" data-p="${p.k}"><span class="chk">✓</span></div></td>`);
+      h+='</tr>';
+      if(p.k==='fp')h+=`<tr><td colspan="${DOCS.length+1}"><div class="divider"></div></td></tr>`;
+    });
+    h+='</tbody></table>';
+    if(gi===0)h+='<div style="height:14px"></div>';
+  });
+  document.getElementById('grid').innerHTML=h;
+  document.querySelectorAll('.dot').forEach(el=>{
+    el.addEventListener('click',async()=>{
+      const {g,d,p}=el.dataset;
+      state[g][d][p]=!state[g][d][p];
+      render();
+      await persist();
+    });
+  });
+}
+
+function groupPct(gid){let done=0,tot=0;DOCS.forEach(d=>{tot+=d.fp+d.so;if(state[gid][d.id].fp)done+=d.fp;if(state[gid][d.id].so)done+=d.so;});return Math.round(done/tot*100);}
+function totalPct(){return Math.round((groupPct('TS')+groupPct('DP'))/2);}
+function ring(id,pct,color){const r=48,c=2*Math.PI*r,off=c*(1-pct/100);document.getElementById(id).innerHTML=`<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${r}" fill="none" stroke="#e6ebf1" stroke-width="14"/><circle cx="60" cy="60" r="${r}" fill="none" stroke="${color}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .6s"/></svg>`;}
+
+function render(){
+  document.querySelectorAll('.dot').forEach(el=>{const {g,d,p}=el.dataset;el.classList.toggle('done',state[g][d][p]);});
+  const ts=groupPct('TS'),dp=groupPct('DP'),tot=totalPct();
+  document.getElementById('valTS').textContent=ts+'%';
+  document.getElementById('valDP').textContent=dp+'%';
+  document.getElementById('valTotal').textContent=tot+'%';
+  document.getElementById('barTS').style.width=ts+'%';
+  document.getElementById('barDP').style.width=dp+'%';
+  document.getElementById('gp_TS').textContent='Progress: '+ts+'%';
+  document.getElementById('gp_DP').textContent='Progress: '+dp+'%';
+  ring('ringTS',ts,'#12876a');ring('ringDP',dp,'#12876a');ring('ringTotal',tot,'#12876a');
+}
+
+function setStatus(mode,txt){const s=document.getElementById('status');s.className='status'+(mode?' '+mode:'');document.getElementById('statusTxt').textContent=txt;}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200);}
+
+async function persist(){
+  if(connected){
+    const {error}=await sb.from('boards').upsert({room:ROOM,state:state,updated_at:new Date().toISOString()});
+    if(error){setStatus('err','Errore salvataggio');console.error(error);}
+  }else{
+    try{localStorage.setItem(LKEY,JSON.stringify(state));}catch(e){}
+  }
+}
+async function loadRemote(){
+  const {data,error}=await sb.from('boards').select('state').eq('room',ROOM).maybeSingle();
+  if(error){console.error(error);return false;}
+  if(data&&data.state)state=data.state;
+  return true;
+}
+function loadLocal(){try{const r=localStorage.getItem(LKEY);if(r)state=JSON.parse(r);}catch(e){}}
+
+async function resetAll(){
+  if(!confirm('Azzerare lo stato condiviso per tutti?'))return;
+  state=blankState();render();await persist();toast('Stato azzerato');
+}
+
+async function init(){
+  buildGrid();
+  if(SUPABASE_URL&&SUPABASE_KEY){
+    try{
+      sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+      await loadRemote();
+      connected=true;
+      setStatus('online','Online — sincronizzato');
+      sb.channel('board-'+ROOM)
+        .on('postgres_changes',{event:'*',schema:'public',table:'boards',filter:'room=eq.'+ROOM},
+          payload=>{ if(payload.new&&payload.new.state){state=payload.new.state;render();} })
+        .subscribe();
+    }catch(e){
+      console.error(e);connected=false;loadLocal();
+      setStatus('err','Config non valida — modalità locale');
+      document.getElementById('setupNote').style.display='block';
+    }
+  }else{
+    loadLocal();
+    setStatus('','Locale (Supabase non configurato)');
+    document.getElementById('setupNote').style.display='block';
+  }
+  render();
+}
+init();
+</script>
+</body>
+</html>
